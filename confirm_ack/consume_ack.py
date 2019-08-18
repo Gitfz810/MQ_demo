@@ -6,7 +6,7 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost')
 
 channel = connection.channel()
 
-channel.exchange_declare(exchange='test_ch', exchange_type='direct')
+channel.exchange_declare(exchange='test_ch', exchange_type='direct', durable=True)
 
 channel.queue_declare(queue='test_queue', durable=True)
 
@@ -17,13 +17,13 @@ channel.queue_bind(queue='test_queue', exchange='test_ch', routing_key='confirma
 def ack_info_handler(ch, method, properties, body):
     """ack_info_handler """
     print('ack_info_handler() called!')
-    if body == 'quit':
+    # 发送确认ack
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    if bytes.decode(body) == 'quit':
         ch.basic_cancel(consumer_tag='hello_confirmation')
-        ch.stop_sonsuming()
+        ch.stop_consuming()
     else:
-        print(body)
-        # 发送确认ack
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        print(bytes.decode(body))
 
 
 # 关闭自动确认消费ACK
