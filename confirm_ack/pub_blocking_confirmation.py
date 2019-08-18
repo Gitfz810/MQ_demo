@@ -23,10 +23,11 @@ if __name__ == '__main__':
     channel.exchange_declare(exchange='test_ch', exchange_type='direct', durable=True)
     # Turn on delivery confirmations
     channel.confirm_delivery()
-    if channel.basic_publish(body=msg, exchange='test_ch', properties=msg_props, routing_key='confirmation', mandatory=True):
-        print('Published!')
+    try:
+        channel.basic_publish(body=msg, exchange='test_ch', properties=msg_props, routing_key='confirmation', mandatory=True)
+        print('Message publish was confirmed!')
         msg_ids.append(len(msg_ids) + 1)
-    else:
-        print('Message lost!')
+    except pika.exceptions.UnroutableError:
+        print('Message could not be confirmed!')
 
     connection.close()
