@@ -14,18 +14,20 @@ channel.queue_bind(queue='test_queue', exchange='test_ch', routing_key='confirma
 
 
 # 定义一个消息确认函数，消费者成功处理完消息后会给队列发送一个确认信息，然后该消息会被删除
-def ack_info_handler(channel, method, header, body):
+def ack_info_handler(ch, method, properties, body):
     """ack_info_handler """
     print('ack_info_handler() called!')
     if body == 'quit':
-        channel.basic_cancel(consumer_tag='hello_confirmation')
-        channel.stop_sonsuming()
+        ch.basic_cancel(consumer_tag='hello_confirmation')
+        ch.stop_sonsuming()
     else:
         print(body)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        # 发送确认ack
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
-channel.basic_consume(queue='test_queue', on_message_callback=ack_info_handler, auto_ack=True, consumer_tag='hello_confirmation')
+# 关闭自动确认消费ACK
+channel.basic_consume(queue='test_queue', on_message_callback=ack_info_handler, auto_ack=False, consumer_tag='hello_confirmation')
 
 print('ready to consume msg...')
 channel.start_consuming()
